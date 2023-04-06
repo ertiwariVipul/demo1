@@ -1,0 +1,79 @@
+ var count=0;
+	function handleFileSelect(evt) {
+		var $fileUpload = $("input#files[type='file']");
+		count=count+parseInt($fileUpload.get(0).files.length);
+		
+		if (count < $fileUpload.get(0).files.length) {
+			alert("You can only upload a maximum of 5 files");
+			count=count-parseInt($fileUpload.get(0).files.length);
+			evt.preventDefault();
+			evt.stopPropagation();
+			return false;
+		}
+		var files = evt.target.files;
+		for (var i = 0, f; f = files[i]; i++) {
+			if (!f.type.match('image.*')) {
+				continue;
+			}
+			var reader = new FileReader();
+
+			reader.onload = (function (theFile) {
+				return function (e) {
+					var span = document.createElement('span');
+					span.innerHTML = ['<li class="ui-state-default multipleImage"><img  class="thumb" src="', e.target.result, '" title="', escape(theFile.name), '" /><span class="remove_img_preview" data-name="', escape(theFile.name), '"></span></li>'].join('');
+					document.getElementById('list').insertBefore(span, null);
+				};
+			})(f);
+
+			reader.readAsDataURL(f);
+		}
+	}
+	
+	$('#files').change(function(evt){
+		handleFileSelect(evt);
+	});	 
+
+	$('#list').on('click', '.remove_img_preview',function () {
+		$(this).parent('.multipleImage').remove();
+        var imageName = [];
+        var imageName = $(this).data("name");
+        var removeImage = `<input type="hidden" name="removeValue[]" value="${imageName}"/>`;
+        $(".removeValue").append(removeImage);
+        // alert(imageName);
+        count--;
+        
+        console.log(count);
+	});
+	
+	
+script-------------------------------------------------------------
+
+<input type="file" id="files" name="product_image[0][]" multiple>
+                                                <br><ul id="list"></ul>
+                                                <div class="removeValue"></div>
+												
+view --------------------------------
+
+
+ foreach ($request->product_image[$key] as $images) {
+                if ($images) {
+                    // upload image on cloudnary
+                 
+                    $name = $images->getClientOriginalName();
+                    if(!in_array($name ,$request->removeValue)){
+
+                        $cloudnary_upload = cloudinary()
+                            ->upload($images->getRealPath(), [
+                                'folder' => 'product_variant',
+                                'transformation' => [
+                                    'quality' => 'auto',
+                                    'fetch_format' => 'auto',
+                                ],
+                            ])
+                            ->getSecurePath();
+                        $path[] = basename($cloudnary_upload);
+                    }
+                }
+			
+			
+controller ------------------------
